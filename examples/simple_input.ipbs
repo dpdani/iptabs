@@ -1,0 +1,6 @@
+~INPUT  # working on the input chain
+  ACCEPT>
+    dport: ssh
+    sport: 10706 ?  # also log this
+  DROP>
+    proto: icmp
