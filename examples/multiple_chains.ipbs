@@ -1,0 +1,9 @@
+~INPUT
+  # nothing to do here...
+~OUTPUT
+  DROP>
+    sport: ssh
+    proto: icmp
+~FORWARD
+  ACCEPT>
+    proto: icmp?

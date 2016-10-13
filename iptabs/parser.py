@@ -18,8 +18,9 @@ For reference examples of the syntax visit the examples/ folder.
 Uses PLY-3 (https://github.com/dabeaz/ply)."""
 
 import lexer
+import sys
 
-with open('../examples/simple_input.ipbs', 'r') as f:
+with open(sys.argv[1], 'r') as f:
     data = f.read()
 
 lexer.lexer.input(data)
@@ -55,15 +56,21 @@ chains = {}
 current_chain = None
 current_action = None
 current_rule_id = None
-current_rule_value = False
+current_rule_value = None
 
 for tok in tokens:
     if tok.type == 'CHAIN':
         current_chain = tok.value
+        current_action = None
+        current_rule_id = None
+        current_rule_value = None
         chains[current_chain] = Chain(current_chain)
     elif tok.type == 'ACTION':
+        current_rule_id = None
+        current_rule_value = None
         current_action = tok.value
     elif tok.type == 'RULE_ID':
+        current_rule_value = None
         current_rule_id = tok.value
     elif tok.type == 'RULE_VALUE':
         current_rule_value = tok.value
