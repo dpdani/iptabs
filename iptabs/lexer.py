@@ -55,4 +55,7 @@ def t_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
 
+def t_error(t):
+    raise SyntaxError('illegal character "{}" at line {}.'.format(t.value[0], t.lexer.lineno))
+
 lexer = lex.lex()
