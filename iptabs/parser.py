@@ -105,6 +105,7 @@ def p_error(p):
         return
 
 
+# Utilities
 def print_chains():
     for chain in chains:
         print('  On', chain, 'chain:')
@@ -131,8 +132,6 @@ def syntax_error(lineno=0, description=''):
     sys.exit(1)
 
 
-
-# Utilities
 def parse_file(path):
     global lineno, parser, source
     with open(path, 'r') as f:
