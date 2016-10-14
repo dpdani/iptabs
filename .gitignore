@@ -91,3 +91,7 @@ ENV/
 # PyCharm
 .idea/
 
+# PLY output
+iptabs/parser.out
+iptabs/parsetab.py
+
