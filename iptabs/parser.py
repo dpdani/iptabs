@@ -66,7 +66,6 @@ def p_begin_chain(p):
     "statement : CHAIN"
     global current_chain, current_action, \
            current_rule_id, current_rule_value
-    print('--- chain: {}'.format(p[1]))
     current_chain = Chain(p[1])
     current_action = None
     current_rule_id = None
@@ -78,29 +77,40 @@ def p_begin_action(p):
     "statement : ACTION"
     global current_action, current_rule_id, \
            current_rule_value
-    print('--- action: {}'.format(p[1]))
     current_rule_id = None
     current_rule_value = None
     if current_chain is None:
-        syntax_error(p.lexer.lineno, 'Entering an action before entering a chain.')
+        syntax_error(lineno, 'Entering an action before entering a chain.')
     current_action = p[1]
 
 
 def p_rule(p):
     "statement : RULE_ID RULE_VALUE"
-    print('--- rule: {}:{}'.format(p[1], p[2]))
     if current_chain is None:
-        syntax_error(p.lexer.lineno, 'Defining a rule before entering a chain.')
+        syntax_error(lineno, 'Defining a rule before entering a chain.')
     elif current_action is None:
-        syntax_error(p.lexer.lineno, 'Defining a rule before entering an action.')
+        syntax_error(lineno, 'Defining a rule before entering an action.')
     else:
         current_chain.rules.append(
             Rule(current_action, p[1], p[2])
         )
 
+def p_rule_log(p):
+    "statement : RULE_ID RULE_VALUE DO_LOG"
+    if current_chain is None:
+        syntax_error(lineno, 'Defining a logging rule before entering a chain.')
+    else:
+        current_chain.log_rules.append(
+            Rule('LOG', p[1], p[2])
+        )
+    return p_rule(p[:-1])
+
 
 def p_error(p):
-    syntax_error(p.lineno, "Couldn't provide more information.")
+    if p:
+        syntax_error(lineno, "Couldn't provide more information.")
+    else:  # EOF
+        return
 
 
 def print_chains():
@@ -114,13 +124,14 @@ def print_chains():
 
 def syntax_error(lineno=0, description=''):
     lineno -= 1
+    source_lines = source.split('\n')
     print("\n\nError in file '{}' at line {}:".format(sys.argv[1], lineno+1), file=sys.stderr)
     try:
-        print('{}|     '.format(lineno), source.split('\n')[lineno-1].rstrip(), file=sys.stderr)
+        print('{}|     '.format(lineno), source_lines[lineno-1].rstrip(), file=sys.stderr)
     except IndexError: pass
-    print('{}|---> '.format(lineno+1), source.split('\n')[lineno].rstrip(), file=sys.stderr)
+    print('{}|---> '.format(lineno+1), source_lines[lineno].rstrip(), file=sys.stderr)
     try:
-        print('{}|     '.format(lineno+2), source.split('\n')[lineno+1].rstrip(), file=sys.stderr)
+        print('{}|     '.format(lineno+2), source_lines[lineno+1].rstrip(), file=sys.stderr)
     except IndexError: pass
     print(description, end='\n\n', file=sys.stderr)
     print("Current status of chains:")
@@ -128,5 +139,12 @@ def syntax_error(lineno=0, description=''):
     sys.exit(1)
 
 
-yacc.yacc()
-parser = yacc.parse(source)
+parser = yacc.yacc()
+lineno = 1
+for line in source.split('\n'):
+    parser.parse(line)
+    lineno += 1
+
+print("Interpreted chains:")
+print_chains()
+
