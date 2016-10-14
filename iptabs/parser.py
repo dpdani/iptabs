@@ -23,20 +23,6 @@ import lexer
 from lexer import tokens
 
 
-with open(sys.argv[1], 'r') as f:
-    source = f.read()
-
-# lexer.lexer.input(data)
-#
-# toks = []
-# while True:
-#     tok = lexer.lexer.token()
-#     if not tok:
-#         break
-#     toks.append(tok)
-#     print(tok)
-
-
 class Chain:
     def __init__(self, name):
         self.name = name
@@ -55,6 +41,11 @@ class Rule:
         return '{}: {} => {}'.format(self.command, self.value, self.action)
 
 
+# Shared states
+path = None
+lineno = None
+source = None
+parser = None
 chains = {}
 current_chain = None
 current_action = None
@@ -62,6 +53,7 @@ current_rule_id = None
 current_rule_value = None
 
 
+# Parser rules
 def p_begin_chain(p):
     "statement : CHAIN"
     global current_chain, current_action, \
@@ -134,17 +126,26 @@ def syntax_error(lineno=0, description=''):
         print('{}|     '.format(lineno+2), source_lines[lineno+1].rstrip(), file=sys.stderr)
     except IndexError: pass
     print(description, end='\n\n', file=sys.stderr)
-    print("Current status of chains:")
+    print('Current status of chains:')
     print_chains()
     sys.exit(1)
 
 
-parser = yacc.yacc()
-lineno = 1
-for line in source.split('\n'):
-    parser.parse(line)
-    lineno += 1
 
-print("Interpreted chains:")
-print_chains()
+# Utilities
+def parse_file(path):
+    global lineno, parser, source
+    with open(path, 'r') as f:
+        source = f.read()
+    parser = yacc.yacc()
+    lineno = 1
+    for line in source.split('\n'):
+        parser.parse(line)
+        lineno += 1
+
+
+if __name__ == '__main__':
+    parse_file(sys.argv[1])
+    print('Interpreted chains:')
+    print_chains()
 
