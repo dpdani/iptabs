@@ -18,35 +18,10 @@ For reference examples of the syntax visit the examples/ folder.
 Uses PLY-3 (https://github.com/dabeaz/ply)."""
 
 import sys
-from enum import Enum
 from ply import yacc
 import lexer
 from lexer import tokens
-
-
-class Policy(Enum):
-    ACCEPT = 'ACCEPT'
-    REJECT = 'REJECT'
-    DROP = 'DROP'
-
-
-class Chain:
-    def __init__(self, name):
-        self.name = name
-        self.log_rules = []
-        self.rules = []
-        self.default_policy = None
-
-
-class Rule:
-    def __init__(self, action, command, value):
-        self.action = action
-        self.command = command
-        self.value = value
-
-    def export(self):
-        ''' Export this rule to an iptables command '''
-        return '{}: {} => {}'.format(self.command, self.value, self.action)
+from structures import *
 
 
 # Shared states
@@ -141,9 +116,9 @@ def print_chains():
         if chains[chain].default_policy is not None:
             print("    default => {}".format(chains[chain].default_policy.value))
         for rule in chains[chain].log_rules:
-            print('   ', rule.export())
+            print('   ', str(rule))
         for rule in chains[chain].rules:
-            print('   ', rule.export())
+            print('   ', str(rule))
 
 
 def syntax_error(lineno=0, description=''):
