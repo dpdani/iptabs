@@ -81,7 +81,14 @@ def p_begin_action(p):
     current_rule_value = None
     if current_chain is None:
         syntax_error(lineno, 'Entering an action before entering a chain.')
-    current_action = p[1]
+    if p[1] == Policy.ACCEPT.value:
+        current_action = Policy.ACCEPT
+    elif p[1] == Policy.REJECT.value:
+        current_action = Policy.REJECT
+    elif p[1] == Policy.DROP.value:
+        current_action = Policy.DROP
+    else:
+        syntax_error(lineno, "Unknown action policy '{}'.".format(p[1]))
 
 
 def p_rule(p):
@@ -172,4 +179,3 @@ if __name__ == '__main__':
     parse_file(sys.argv[1])
     print('Interpreted chains:')
     print_chains()
-
