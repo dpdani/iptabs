@@ -22,16 +22,16 @@ from ply import lex
 tokens = (
     'CHAIN',
     'ACTION',
+    'DEFAULT_POLICY',
     'RULE_ID',
     'RULE_VALUE',
     'DO_LOG',
-    'COMMENT'
+    'COMMENT',
 )
 
 t_RULE_VALUE = r'[a-zA-Z_0-9]+'
 t_DO_LOG = r'\?'
 t_ignore_COMMENT = r'\#.*'
-
 t_ignore = ' \t'
 
 
@@ -43,6 +43,13 @@ def t_CHAIN(t):
 def t_ACTION(t):
     r'[a-zA-Z_][a-zA-Z_0-9]*>'
     t.value = t.value[:-1]  # remove the '>' character
+    return t
+
+def t_DEFAULT_POLICY(t):
+    # do place above t_RULE_ID for correct tokenization
+    r'default:\s*[a-zA-Z_][a-zA-Z_0-9]+'
+    # remove 'default: ' and any unnecessary space
+    t.value = t.value.replace('default:', '').replace(' ', '').replace('\t', '')
     return t
 
 def t_RULE_ID(t):

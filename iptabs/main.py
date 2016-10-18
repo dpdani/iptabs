@@ -15,12 +15,25 @@
 
 import sys
 import parser
+import argparse
 
 
 def main(args):
-    parser.parse_file(args[0])
-    parser.print_chains()
+    if args.only_parse:
+        parser.parse_file(args.source)
+        print("Parsed from file '{}':".format(args.source))
+        parser.print_chains()
+    else:
+        print("Work in progress.")
+    return 0
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    args = argparse.ArgumentParser()
+    args.add_argument('source', help="file from which read configuration")
+    args.add_argument('-p', '--only-parse', help="only parse SOURCE file. Do not talk to iptables.",
+                      action='store_true')
+    args = args.parse_args()
+    sys.exit(
+        main(args)
+    )

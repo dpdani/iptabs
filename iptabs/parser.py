@@ -18,9 +18,16 @@ For reference examples of the syntax visit the examples/ folder.
 Uses PLY-3 (https://github.com/dabeaz/ply)."""
 
 import sys
+from enum import Enum
 from ply import yacc
 import lexer
 from lexer import tokens
+
+
+class Policy(Enum):
+    ACCEPT = 'ACCEPT'
+    REJECT = 'REJECT'
+    DROP = 'DROP'
 
 
 class Chain:
@@ -28,6 +35,7 @@ class Chain:
         self.name = name
         self.log_rules = []
         self.rules = []
+        self.default_policy = None
 
 
 class Rule:
@@ -42,7 +50,7 @@ class Rule:
 
 
 # Shared states
-path = None
+source_path = None
 lineno = None
 source = None
 parser = None
@@ -98,6 +106,20 @@ def p_rule_log(p):
     return p_rule(p[:-1])
 
 
+def p_default_policy(p):
+    "statement : DEFAULT_POLICY"
+    if current_chain is None:
+        syntax_error(lineno, "Defining a default policy before entering a chain.")
+    if p[1] == Policy.ACCEPT.value:
+        current_chain.default_policy = Policy.ACCEPT
+    elif p[1] == Policy.REJECT.value:
+        current_chain.default_policy = Policy.REJECT
+    elif p[1] == Policy.DROP.value:
+        current_chain.default_policy = Policy.DROP
+    else:
+        syntax_error(lineno, "Unknown default policy '{}'.".format(p[1]))
+
+
 def p_error(p):
     if p:
         syntax_error(lineno, "Couldn't provide more information.")
@@ -109,6 +131,8 @@ def p_error(p):
 def print_chains():
     for chain in chains:
         print('  On', chain, 'chain:')
+        if chains[chain].default_policy is not None:
+            print("    default => {}".format(chains[chain].default_policy.value))
         for rule in chains[chain].log_rules:
             print('   ', rule.export())
         for rule in chains[chain].rules:
@@ -118,7 +142,7 @@ def print_chains():
 def syntax_error(lineno=0, description=''):
     lineno -= 1
     source_lines = source.split('\n')
-    print("\n\nError in file '{}' at line {}:".format(sys.argv[1], lineno+1), file=sys.stderr)
+    print("\n\nError in file '{}' at line {}:".format(source_path, lineno+1), file=sys.stderr)
     try:
         print('{}|     '.format(lineno), source_lines[lineno-1].rstrip(), file=sys.stderr)
     except IndexError: pass
@@ -133,9 +157,10 @@ def syntax_error(lineno=0, description=''):
 
 
 def parse_file(path):
-    global lineno, parser, source
+    global source_path, lineno, parser, source
     with open(path, 'r') as f:
         source = f.read()
+    source_path = path
     parser = yacc.yacc()
     lineno = 1
     for line in source.split('\n'):
