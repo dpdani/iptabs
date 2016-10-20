@@ -47,3 +47,18 @@ class Rule:
         else:
             action = self.action.value
         return '{}: {} => {}'.format(self.command, self.value, action)
+
+
+class ComplexRule(Rule):
+    def __init__(self, *args):
+        for i,arg in enumerate(args):
+            if not isinstance(arg, Rule):
+                raise TypeError("arguments expected to be instances of Rule. Check item #{}.".format(i))
+        self.rules = args
+        super().__init__(None, None, None)
+
+    def __str__(self):
+        '\n'.join([str(rule) for rule in self])
+
+    def __iter__(self):
+        return iter(self.rules)
