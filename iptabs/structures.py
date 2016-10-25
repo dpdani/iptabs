@@ -34,38 +34,38 @@ class Chain:
 
 
 class Rule:
-    def __init__(self, action, command, value, *, log_label=''):
+    def __init__(self, action, command, value, *, log_prefix=''):
         if not isinstance(action, Policy):
             raise TypeError("expected argument 'action' to be a Policy instance.")
         self.action = action
         self.command = command
         self.value = value
         if action == Policy.LOG:
-            self.log_label = log_label
+            self.log_prefix = log_prefix
         else:
-            self.log_label = None
+            self.log_prefix = None
 
     def __repr__(self):
         return "<{} {}>".format(self.__class__.__name__, str(self))
 
     def __str__(self):
-        return '{}: {} => {}'.format(self.command, self.value, self.action.value) + (' ({})'.format(self.log_label)
-                                                                                     if self.log_label else '')
+        return '{}: {} => {}'.format(self.command, self.value, self.action.value) + (' ({})'.format(self.log_prefix)
+                                                                                     if self.log_prefix else '')
 
 
 class ComplexRule(Rule):
-    def __init__(self, action, *args, log_label=''):
+    def __init__(self, action, *args, log_prefix=''):
         for i,arg in enumerate(args):
             if not isinstance(arg, Rule):
                 print(arg)
                 raise TypeError("arguments expected to be instances of Rule. Check item #{}.".format(i))
         self.rules = args
         # actions defined in self.rules are ignored
-        super().__init__(action, None, None, log_label=log_label)
+        super().__init__(action, None, None, log_prefix=log_prefix)
 
     def __str__(self):
         return ' && '.join([str(rule)[:str(rule).find('=')-1] for rule in self]) + ' => ' + str(self.action.value) + \
-               (' ({})'.format(self.log_label) if self.log_label else '')
+               (' ({})'.format(self.log_prefix) if self.log_prefix else '')
 
     def __iter__(self):
         return iter(self.rules)

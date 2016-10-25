@@ -88,7 +88,7 @@ def p_rule(p):
 
 def p_simple_rule_log(p):
     """statement : RULE_ID RULE_VALUE DO_LOG
-                 | RULE_ID RULE_VALUE DO_LOG LOG_LABEL"""
+                 | RULE_ID RULE_VALUE DO_LOG LOG_PREFIX"""
     if current_chain is None:
         syntax_error(lineno, 'Defining a logging rule before entering a chain.')
     else:
@@ -97,7 +97,7 @@ def p_simple_rule_log(p):
         else:
             label = ''
         current_chain.log_rules.append(
-            Rule(Policy.LOG, p[1], p[2], log_label=label)
+            Rule(Policy.LOG, p[1], p[2], log_prefix=label)
         )
     return p_rule(p[:-1])
 
@@ -105,7 +105,7 @@ def p_simple_rule_log(p):
 def p_complex_rule(p):
     """statement : rule RULE_JOINER rule
                  | rule RULE_JOINER rule DO_LOG
-                 | rule RULE_JOINER rule DO_LOG LOG_LABEL"""
+                 | rule RULE_JOINER rule DO_LOG LOG_PREFIX"""
     if current_chain is None:
         syntax_error(lineno, 'Defining a rule before entering a chain.')
     elif current_action is None:
@@ -120,7 +120,7 @@ def p_complex_rule(p):
             else:
                 label = ''
             current_chain.log_rules.append(
-                ComplexRule(Policy.LOG, p[1], p[3], log_label=label)
+                ComplexRule(Policy.LOG, p[1], p[3], log_prefix=label)
             )
 
 

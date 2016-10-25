@@ -26,7 +26,7 @@ tokens = (
     'RULE_ID',
     'RULE_VALUE',
     'DO_LOG',
-    'LOG_LABEL',
+    'LOG_PREFIX',
     'COMMENT',
     'RULE_JOINER'
 )
@@ -61,7 +61,7 @@ def t_RULE_ID(t):
     return t
 
 
-def t_LOG_LABEL(t):
+def t_LOG_PREFIX(t):
     r'\([a-zA-Z_][a-zA-Z_0-9]*\)'
     t.value = t.value[1:-1]
     return t
