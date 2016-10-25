@@ -26,11 +26,14 @@ tokens = (
     'RULE_ID',
     'RULE_VALUE',
     'DO_LOG',
+    'LOG_LABEL',
     'COMMENT',
+    'RULE_JOINER'
 )
 
-t_RULE_VALUE = r'[a-zA-Z_0-9]+'
+t_RULE_VALUE = r'[a-zA-Z_0-9./]+'
 t_DO_LOG = r'\?'
+t_RULE_JOINER = r'&&'
 t_ignore_COMMENT = r'\#.*'
 t_ignore = ' \t'
 
@@ -58,9 +61,16 @@ def t_RULE_ID(t):
     return t
 
 
+def t_LOG_LABEL(t):
+    r'\([a-zA-Z_][a-zA-Z_0-9]*\)'
+    t.value = t.value[1:-1]
+    return t
+
+
 def t_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
+
 
 def t_error(t):
     raise SyntaxError('illegal character "{}" at line {}.'.format(t.value[0], t.lexer.lineno))

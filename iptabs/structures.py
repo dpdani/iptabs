@@ -22,6 +22,7 @@ class Policy(Enum):
     ACCEPT = 'ACCEPT'
     REJECT = 'REJECT'
     DROP = 'DROP'
+    LOG = 'LOG'
 
 
 class Chain:
@@ -33,32 +34,38 @@ class Chain:
 
 
 class Rule:
-    def __init__(self, action, command, value):
+    def __init__(self, action, command, value, *, log_label=''):
+        if not isinstance(action, Policy):
+            raise TypeError("expected argument 'action' to be a Policy instance.")
         self.action = action
         self.command = command
         self.value = value
+        if action == Policy.LOG:
+            self.log_label = log_label
+        else:
+            self.log_label = None
 
     def __repr__(self):
-        return "<Rule {}>".format(str(self))
+        return "<{} {}>".format(self.__class__.__name__, str(self))
 
     def __str__(self):
-        if self.action == 'LOG':
-            action = 'LOG'
-        else:
-            action = self.action.value
-        return '{}: {} => {}'.format(self.command, self.value, action)
+        return '{}: {} => {}'.format(self.command, self.value, self.action.value) + (' ({})'.format(self.log_label)
+                                                                                     if self.log_label else '')
 
 
 class ComplexRule(Rule):
-    def __init__(self, *args):
+    def __init__(self, action, *args, log_label=''):
         for i,arg in enumerate(args):
             if not isinstance(arg, Rule):
+                print(arg)
                 raise TypeError("arguments expected to be instances of Rule. Check item #{}.".format(i))
         self.rules = args
-        super().__init__(None, None, None)
+        # actions defined in self.rules are ignored
+        super().__init__(action, None, None, log_label=log_label)
 
     def __str__(self):
-        '\n'.join([str(rule) for rule in self])
+        return ' && '.join([str(rule)[:str(rule).find('=')-1] for rule in self]) + ' => ' + str(self.action.value) + \
+               (' ({})'.format(self.log_label) if self.log_label else '')
 
     def __iter__(self):
         return iter(self.rules)

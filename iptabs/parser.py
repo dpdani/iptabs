@@ -66,26 +66,62 @@ def p_begin_action(p):
         syntax_error(lineno, "Unknown action policy '{}'.".format(p[1]))
 
 
-def p_rule(p):
+def p_simple_rule(p):
     "statement : RULE_ID RULE_VALUE"
     if current_chain is None:
         syntax_error(lineno, 'Defining a rule before entering a chain.')
     elif current_action is None:
         syntax_error(lineno, 'Defining a rule before entering an action.')
     else:
-        current_chain.rules.append(
-            Rule(current_action, p[1], p[2])
-        )
+        new_rule = Rule(current_action, p[1], p[2])
+        current_chain.rules.append(new_rule)
+        p[0] = new_rule
 
-def p_rule_log(p):
-    "statement : RULE_ID RULE_VALUE DO_LOG"
+def p_rule(p):
+    "rule : RULE_ID RULE_VALUE"
+    if current_chain is None:
+        syntax_error(lineno, 'Defining a rule before entering a chain.')
+    elif current_action is None:
+        syntax_error(lineno, 'Defining a rule before entering an action.')
+    else:
+        p[0] = Rule(current_action, p[1], p[2])
+
+def p_simple_rule_log(p):
+    """statement : RULE_ID RULE_VALUE DO_LOG
+                 | RULE_ID RULE_VALUE DO_LOG LOG_LABEL"""
     if current_chain is None:
         syntax_error(lineno, 'Defining a logging rule before entering a chain.')
     else:
+        if len(p) == 5:
+            label = p[4]
+        else:
+            label = ''
         current_chain.log_rules.append(
-            Rule('LOG', p[1], p[2])
+            Rule(Policy.LOG, p[1], p[2], log_label=label)
         )
     return p_rule(p[:-1])
+
+
+def p_complex_rule(p):
+    """statement : rule RULE_JOINER rule
+                 | rule RULE_JOINER rule DO_LOG
+                 | rule RULE_JOINER rule DO_LOG LOG_LABEL"""
+    if current_chain is None:
+        syntax_error(lineno, 'Defining a rule before entering a chain.')
+    elif current_action is None:
+        syntax_error(lineno, 'Defining a rule before entering an action.')
+    else:
+        current_chain.rules.append(
+            ComplexRule(current_action, p[1], p[3])
+        )
+        if len(p) >= 5:
+            if len(p) == 6:
+                label = p[5]
+            else:
+                label = ''
+            current_chain.log_rules.append(
+                ComplexRule(Policy.LOG, p[1], p[3], log_label=label)
+            )
 
 
 def p_default_policy(p):

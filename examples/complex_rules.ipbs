@@ -1,0 +1,5 @@
+~INPUT
+  default: DROP
+  ACCEPT>
+    source: 192.168.1.100 && dport: 22 ? (hatersgonnahate)
+    source: 192.168.1.100 && dport: 80
