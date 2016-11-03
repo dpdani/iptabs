@@ -10,6 +10,16 @@ sudo pip3 install -r requirements.txt
 ```
 
 ## Basic Usage
+Let's make a basic firewall set-up with iptabs:
+```
+~INPUT  # working on the input chain
+  ACCEPT>
+    dport: ssh
+    sport: 10706 ?  # also log this
+  DROP>
+    proto: icmp
+```
+(this example is `examples/simple_input.ipbs`) <br>
 To configure iptables from an iptabs file simply call:
 ```
 python3 iptabs/main.py yourfile.ipbs
