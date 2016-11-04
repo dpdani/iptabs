@@ -22,10 +22,11 @@ DEBUG_MODE = False
 
 
 LIST = "iptables -L {} -n"
-APPEND = "iptables -A {} --protocol tcp {} -j {}"  # only support TCP for now
+APPEND = "iptables -A {} {} -j {}"
+INSERT = "iptables -I {} {} -j {}"
+CHECK = "iptables -C {} {} -j {}"
+DELETE = "iptables -D {} {} -j {}"
 DEFAULT_POLICY = "iptables -P {} {}"
-CHECK = "iptables -C "
-DELETE = "workinprogress"
 
 
 class NotRootException(Exception):
@@ -58,14 +59,102 @@ def append_complex_rule(chain, rule):
     ))
 
 
+def insert_rule(chain, rule):
+    return make_call(INSERT.format(
+        chain,
+        ' '.join(["--{} {}".format(r.command, r.value) for r in rule.rules]),
+        rule.action.value + (' --log-prefix {}'.format(rule.log_prefix) if rule.log_prefix else '')
+    ))
+
+
+def insert_complex_rule(chain, rule):
+    return make_call(INSERT.format(
+        chain,
+        ' '.join(["--{} {}".format(r.command, r.value) for r in rule.rules]),
+        rule.action.value + (' --log-prefix {}'.format(rule.log_prefix) if rule.log_prefix else '')
+    ))
+
+
+def delete_rule(chain, rule):
+    return make_call(DELETE.format(
+        chain,
+        ' '.join(["--{} {}".format(r.command, r.value) for r in rule.rules]),
+        rule.action.value + (' --log-prefix {}'.format(rule.log_prefix) if rule.log_prefix else '')
+    ))
+
+
+def delete_complex_rule(chain, rule):
+    return make_call(DELETE.format(
+        chain,
+        ' '.join(["--{} {}".format(r.command, r.value) for r in rule.rules]),
+        rule.action.value + (' --log-prefix {}'.format(rule.log_prefix) if rule.log_prefix else '')
+    ))
+
+
+def check_rule(chain, rule):
+    resp = make_call(CHECK.format(
+        chain,
+        ' '.join(["--{} {}".format(r.command, r.value) for r in rule.rules]),
+        rule.action.value + (' --log-prefix {}'.format(rule.log_prefix) if rule.log_prefix else '')
+    ))
+    return resp == ''
+
+
+def check_complex_rule(chain, rule):
+    resp = make_call(CHECK.format(
+        chain,
+        ' '.join(["--{} {}".format(r.command, r.value) for r in rule.rules]),
+        rule.action.value + (' --log-prefix {}'.format(rule.log_prefix) if rule.log_prefix else '')
+    ))
+    return resp == ''
+
+
 def set_default_policy(chain, policy):
     return make_call(DEFAULT_POLICY.format(
         chain, policy.value
     ))
 
 
-def check_rule():
-    pass
+# Utilities
+
+def apply_rules(chains, behaviour):
+    if not isinstance(behaviour, Behaviour):
+        raise TypeError("expected argument behaviour to be an instance of Behaviour. Got: '{}'.".format(behaviour))
+    for chain in chains:
+        if chains[chain].default_policy is not None:
+            set_default_policy(chain, chains[chain].default_policy)
+        for rule in chains[chain].log_rules:  # it is a best practice to put the log rules first
+            if isinstance(rule, ComplexRule):
+                if behaviour == Behaviour.APPEND:
+                    append_complex_rule(chain, rule)
+                elif behaviour == Behaviour.INSERT:
+                    insert_complex_rule(chain, rule)
+                elif behaviour == Behaviour.ENFORCE:
+                    pass  # TODO
+            else:
+                if behaviour == Behaviour.APPEND:
+                    append_rule(chain, rule)
+                elif behaviour == Behaviour.INSERT:
+                    insert_rule(chain, rule)
+                elif behaviour == Behaviour.ENFORCE:
+                    pass  # TODO
+                append_rule(chain, rule)
+        for rule in chains[chain].rules:
+            if isinstance(rule, ComplexRule):
+                if behaviour == Behaviour.APPEND:
+                     append_complex_rule(chain, rule)
+                elif behaviour == Behaviour.INSERT:
+                     insert_complex_rule(chain, rule)
+                elif behaviour == Behaviour.ENFORCE:
+                     pass  # TODO
+            else:
+                if behaviour == Behaviour.APPEND:
+                    append_rule(chain, rule)
+                elif behaviour == Behaviour.INSERT:
+                    insert_rule(chain, rule)
+                elif behaviour == Behaviour.ENFORCE:
+                    pass  # TODO
+
 
 # def list_rules(chain=''):
 #     rules = make_call(LIST.format(chain))

@@ -29,6 +29,7 @@ source_path = None
 lineno = None
 source = None
 parser = None
+behaviour = None
 chains = {}
 current_chain = None
 current_action = None
@@ -37,6 +38,22 @@ current_rule_value = None
 
 
 # Parser rules
+def p_behaviour(p):
+    "statement : BEHAVIOUR"
+    global behaviour
+    if behaviour is not None:
+        syntax_error(lineno, 'Illegal redefinement of behaviour.')
+    else:
+        if p[1] == Behaviour.APPEND.value:
+            behaviour = Behaviour.APPEND
+        elif p[1] == Behaviour.INSERT.value:
+            behaviour = Behaviour.INSERT
+        elif p[1] == Behaviour.ENFORCE.value:
+            behaviour = Behaviour.ENFORCE
+        else:
+            syntax_error(lineno, "Unknown behaviour '{}'.".format(p[1]))
+
+
 def p_begin_chain(p):
     "statement : CHAIN"
     global current_chain, current_action, \

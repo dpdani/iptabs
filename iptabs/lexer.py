@@ -28,7 +28,8 @@ tokens = (
     'DO_LOG',
     'LOG_PREFIX',
     'COMMENT',
-    'RULE_JOINER'
+    'RULE_JOINER',
+    'BEHAVIOUR',
 )
 
 t_RULE_VALUE = r'[a-zA-Z_0-9./]+'
@@ -64,6 +65,12 @@ def t_RULE_ID(t):
 def t_LOG_PREFIX(t):
     r'\([a-zA-Z_][a-zA-Z_0-9]*\)'
     t.value = t.value[1:-1]
+    return t
+
+
+def t_BEHAVIOUR(t):
+    r'%[a-zA-Z]+'
+    t.value = t.value[1:]
     return t
 
 

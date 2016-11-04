@@ -1,0 +1,6 @@
+%insert
+
+~INPUT
+  ACCEPT>
+    proto: tcp && dport: 7777
+

@@ -25,6 +25,12 @@ class Policy(Enum):
     LOG = 'LOG'
 
 
+class Behaviour(Enum):
+    INSERT = 'insert'
+    APPEND = 'append'
+    ENFORCE = 'enforce'
+
+
 class Chain:
     def __init__(self, name):
         self.name = name

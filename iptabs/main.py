@@ -28,7 +28,6 @@ def main(args):
     if not args.silent:
         print("Parsed from file '{}':".format(args.source))
         parser.print_chains()
-    chains = parser.chains
     if not args.only_parse:
         if not (args.yes or args.silent):  # confirmation
             while True:
@@ -41,19 +40,9 @@ def main(args):
                 elif inp == 'y':
                     break
         try:
-            for chain in chains:
-                if chains[chain].default_policy is not None:
-                    iptables_talker.set_default_policy(chain, chains[chain].default_policy)
-                for rule in chains[chain].log_rules:  # it is a best practice to put the log rules first
-                    if isinstance(rule, ComplexRule):
-                        iptables_talker.append_complex_rule(chain, rule)
-                    else:
-                        iptables_talker.append_rule(chain, rule)
-                for rule in chains[chain].rules:
-                    if isinstance(rule, ComplexRule):
-                        iptables_talker.append_complex_rule(chain, rule)
-                    else:
-                        iptables_talker.append_rule(chain, rule)
+            if parser.behaviour == None:
+                parser.behaviour = Behaviour.APPEND
+            iptables_talker.apply_rules(parser.chains, parser.behaviour)
         except iptables_talker.NotRootException:
             print("\n\n[ERROR]  You need to be root to make calls to iptables. EUID: {}.".format(os.geteuid()))
             return 1
