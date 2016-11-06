@@ -14,8 +14,8 @@ Let's make a basic firewall set-up with iptabs:
 ```
 ~INPUT  # working on the input chain
   ACCEPT>
-    dport: ssh
-    sport: 10706 ?  # also log this
+    proto: tcp && dport: ssh
+    proto: tcp && sport: 10706 ?  # also log this
   DROP>
     proto: icmp
 ```
