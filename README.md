@@ -35,7 +35,7 @@ Parsed from file 'examples/simple_input.ipbs':
 Are you sure you want to append these rules to iptables? [y/N] y
 [DEBUG]  $ iptables -A INPUT --protocol tcp --sport 10706 -j LOG
 [DEBUG]  $ iptables -A INPUT --protocol tcp --dport ssh -j ACCEPT
-[DEBUG]  $ iptables -A INPUT --protocol tcp --proto icmp -j DROP
+[DEBUG]  $ iptables -A INPUT --proto icmp -j DROP
 $ _
 ```
 You can find more sample iptabs files in the `examples` folder.
