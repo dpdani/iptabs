@@ -192,7 +192,7 @@ def syntax_error(lineno=0, description=''):
 
 
 def parse_file(path):
-    global source_path, lineno, parser, source
+    global source_path, lineno, parser, source, behaviour
     with open(path, 'r') as f:
         source = f.read()
     source_path = path
@@ -201,6 +201,8 @@ def parse_file(path):
     for line in source.split('\n'):
         parser.parse(line)
         lineno += 1
+    if behaviour == None:
+        behaviour = Behaviour.APPEND
 
 
 if __name__ == '__main__':

@@ -27,6 +27,7 @@ def main(args):
     parser.parse_file(args.source)
     if not args.silent:
         print("Parsed from file '{}':".format(args.source))
+        print("  Behaviour: {}".format(parser.behaviour.value))
         parser.print_chains()
     if not args.only_parse:
         if not (args.yes or args.silent):  # confirmation
@@ -40,8 +41,6 @@ def main(args):
                 elif inp == 'y':
                     break
         try:
-            if parser.behaviour == None:
-                parser.behaviour = Behaviour.APPEND
             iptables_talker.apply_rules(parser.chains, parser.behaviour)
         except iptables_talker.NotRootException:
             print("\n\n[ERROR]  You need to be root to make calls to iptables. EUID: {}.".format(os.geteuid()))

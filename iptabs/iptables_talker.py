@@ -27,6 +27,7 @@ INSERT = "iptables -I {} {} -j {}"
 CHECK = "iptables -C {} {} -j {}"
 DELETE = "iptables -D {} {} -j {}"
 DEFAULT_POLICY = "iptables -P {} {}"
+FLUSH = "iptables -F {}"
 
 
 class NotRootException(Exception):
@@ -115,45 +116,44 @@ def set_default_policy(chain, policy):
     ))
 
 
+def flush_chain(chain):
+    return make_call(FLUSH.format(
+        chain
+    ))
+
+
 # Utilities
 
 def apply_rules(chains, behaviour):
     if not isinstance(behaviour, Behaviour):
         raise TypeError("expected argument behaviour to be an instance of Behaviour. Got: '{}'.".format(behaviour))
+    if behaviour == Behaviour.ENFORCE:
+        flush_chain('')  # flush every chain
     for chain in chains:
         if chains[chain].default_policy is not None:
             set_default_policy(chain, chains[chain].default_policy)
         for rule in chains[chain].log_rules:  # it is a best practice to put the log rules first
             if isinstance(rule, ComplexRule):
-                if behaviour == Behaviour.APPEND:
+                if behaviour == Behaviour.APPEND or behaviour == Behaviour.ENFORCE:
                     append_complex_rule(chain, rule)
                 elif behaviour == Behaviour.INSERT:
                     insert_complex_rule(chain, rule)
-                elif behaviour == Behaviour.ENFORCE:
-                    pass  # TODO
             else:
-                if behaviour == Behaviour.APPEND:
+                if behaviour == Behaviour.APPEND or behaviour == Behaviour.ENFORCE:
                     append_rule(chain, rule)
                 elif behaviour == Behaviour.INSERT:
                     insert_rule(chain, rule)
-                elif behaviour == Behaviour.ENFORCE:
-                    pass  # TODO
-                append_rule(chain, rule)
         for rule in chains[chain].rules:
             if isinstance(rule, ComplexRule):
                 if behaviour == Behaviour.APPEND:
                      append_complex_rule(chain, rule)
                 elif behaviour == Behaviour.INSERT:
                      insert_complex_rule(chain, rule)
-                elif behaviour == Behaviour.ENFORCE:
-                     pass  # TODO
             else:
-                if behaviour == Behaviour.APPEND:
+                if behaviour == Behaviour.APPEND or behaviour == Behaviour.ENFORCE:
                     append_rule(chain, rule)
                 elif behaviour == Behaviour.INSERT:
                     insert_rule(chain, rule)
-                elif behaviour == Behaviour.ENFORCE:
-                    pass  # TODO
 
 
 # def list_rules(chain=''):
@@ -198,3 +198,4 @@ def apply_rules(chains, behaviour):
 #         else:  # end of chains
 #             break
 #     return chains
+
