@@ -122,22 +122,34 @@ def p_simple_rule_log(p):
 def p_complex_rule(p):
     """statement : rule RULE_JOINER rule
                  | rule RULE_JOINER rule DO_LOG
-                 | rule RULE_JOINER rule DO_LOG LOG_PREFIX"""
+                 | rule RULE_JOINER rule DO_LOG LOG_PREFIX
+                 | rule RULE_JOINER rule RULE_JOINER rule
+                 | rule RULE_JOINER rule RULE_JOINER rule DO_LOG
+                 | rule RULE_JOINER rule RULE_JOINER rule DO_LOG LOG_PREFIX"""
     if current_chain is None:
         syntax_error(lineno, 'Defining a rule before entering a chain.')
     elif current_action is None:
         syntax_error(lineno, 'Defining a rule before entering an action.')
     else:
+        parsed = p[1:]
+        rules = []
+        do_log = False
+        label = ''
+        for elem in parsed:
+            if elem == '&&':
+                continue
+            if isinstance(elem, Rule):
+                rules.append(elem)
+            if elem == '?':
+                do_log = True
+            elif type(elem) == str:
+                label = elem
         current_chain.rules.append(
-            ComplexRule(current_action, p[1], p[3])
+            ComplexRule(current_action, *rules)
         )
-        if len(p) >= 5:
-            if len(p) == 6:
-                label = p[5]
-            else:
-                label = ''
+        if do_log:
             current_chain.log_rules.append(
-                ComplexRule(Policy.LOG, p[1], p[3], log_prefix=label)
+                ComplexRule(Policy.LOG, *rules, log_prefix=label)
             )
 
 
@@ -157,7 +169,7 @@ def p_default_policy(p):
 
 def p_error(p):
     if p:
-        syntax_error(lineno, "Couldn't provide more information.")
+        syntax_error(lineno, "Syntax error.")
     else:  # EOF
         return
 
