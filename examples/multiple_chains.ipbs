@@ -2,7 +2,7 @@
   # nothing to do here...
 ~OUTPUT
   DROP>
-    sport: ssh
+    proto: tcp && sport: ssh
     proto: icmp
 ~FORWARD
   default: DROP

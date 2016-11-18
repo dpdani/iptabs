@@ -99,20 +99,26 @@ def delete_complex_rule(chain, rule):
 
 
 def check_rule(chain, rule):
-    resp = make_call(CHECK.format(
-        chain,
-        ' '.join(["--{} {}".format(r.command, r.value) for r in rule.rules]),
-        rule.action.value + (' --log-prefix {}'.format(rule.log_prefix) if rule.log_prefix else '')
-    ))
+    try:
+        resp = make_call(CHECK.format(
+            chain,
+            "--{} {}".format(rule.command, rule.value),
+            rule.action.value + (' --log-prefix {}'.format(rule.log_prefix) if rule.log_prefix else '')
+        ))
+    except subprocess.CalledProcessError:  # rule not found -> non-zero exit status
+        return False
     return resp == ''
 
 
 def check_complex_rule(chain, rule):
-    resp = make_call(CHECK.format(
-        chain,
-        ' '.join(["--{} {}".format(r.command, r.value) for r in rule.rules]),
-        rule.action.value + (' --log-prefix {}'.format(rule.log_prefix) if rule.log_prefix else '')
-    ))
+    try:
+        resp = make_call(CHECK.format(
+            chain,
+            ' '.join(["--{} {}".format(r.command, r.value) for r in rule.rules]),
+            rule.action.value + (' --log-prefix {}'.format(rule.log_prefix) if rule.log_prefix else '')
+        ))
+    except subprocess.CalledProcessError:  # rule not found -> non-zero exit status
+        return False
     return resp == ''
 
 
@@ -140,22 +146,34 @@ def apply_rules(chains, behaviour):
             set_default_policy(chain, chains[chain].default_policy)
         for rule in chains[chain].log_rules:  # it is a best practice to put the log rules first
             if isinstance(rule, ComplexRule):
+                if check_complex_rule(chain, rule):
+                    print("Rule '{}' already exists in chain '{}'.".format(str(rule)[:25] + (str(rule)[25:] and '...') + (str(rule)[-10:] if not str(rule)[:25].endswith(str(rule)[-10:]) else ''), chain))
+                    continue
                 if behaviour == Behaviour.APPEND or behaviour == Behaviour.ENFORCE:
                     append_complex_rule(chain, rule)
                 elif behaviour == Behaviour.INSERT:
                     insert_complex_rule(chain, rule)
             else:
+                if check_rule(chain, rule):
+                    print("Rule '{}' already exists in chain '{}'.".format(str(rule)[:25] + (str(rule)[25:] and '...') + (str(rule)[-10:] if not str(rule)[:25].endswith(str(rule)[-10:]) else ''), chain))
+                    continue
                 if behaviour == Behaviour.APPEND or behaviour == Behaviour.ENFORCE:
                     append_rule(chain, rule)
                 elif behaviour == Behaviour.INSERT:
                     insert_rule(chain, rule)
         for rule in chains[chain].rules:
             if isinstance(rule, ComplexRule):
+                if check_complex_rule(chain, rule):
+                    print("Rule '{}' already exists in chain '{}'.".format(str(rule)[:25] + (str(rule)[25:] and '...') + (str(rule)[-10:] if not str(rule)[:25].endswith(str(rule)[-10:]) else ''), chain))
+                    continue
                 if behaviour == Behaviour.APPEND:
                      append_complex_rule(chain, rule)
                 elif behaviour == Behaviour.INSERT:
                      insert_complex_rule(chain, rule)
             else:
+                if check_rule(chain, rule):
+                    print("Rule '{}' already exists in chain '{}'.".format(str(rule)[:25] + (str(rule)[25:] and '...') + (str(rule)[-10:] if not str(rule)[:25].endswith(str(rule)[-10:]) else ''), chain))
+                    continue
                 if behaviour == Behaviour.APPEND or behaviour == Behaviour.ENFORCE:
                     append_rule(chain, rule)
                 elif behaviour == Behaviour.INSERT:
