@@ -18,7 +18,37 @@ import sys
 import argparse
 import parser
 import iptables_talker
+import logging
+import logging.config
 from structures import *
+
+
+logging.config.dictConfig({
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'default': {
+            'format': "%(levelname)s|%(asctime)s: %(message)s"
+        }
+    },
+    'handlers': {
+        'logfile': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'formatter': 'default',
+            'maxBytes': 1000000,  # 1 Mb
+            'backupCount': 1,  # occupies at most 50Mb for logs
+            'filename': 'sent_commands.log'
+        }
+    },
+    'loggers': {
+        '': {
+            'handlers': ['logfile'],
+            'level': 'DEBUG',
+            'propagate': True,
+        }
+    }
+})
 
 
 def main(args):

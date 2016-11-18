@@ -16,6 +16,11 @@
 import subprocess
 import os
 from structures import *
+import logging
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 DEBUG_MODE = False
@@ -41,6 +46,7 @@ def make_call(command):
         return
     if os.geteuid() != 0:
         raise NotRootException()
+    logger.info(command)
     return subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True).decode('utf-8')
 
 
